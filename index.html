@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="祥安帳款">
+<title>祥安生命 帳款系統</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;600&display=swap');
+:root{
+  --gold:#c9a84c;--gold2:#e8c97a;--gold3:#7a6030;--gold4:#3a2e18;
+  --bg:#0a0805;--bg2:#141108;--bg3:#1c1910;--bg4:#242018;--bg5:#2c2820;
+  --t1:#f0e6cc;--t2:#9a8a68;--t3:#5a5040;--t4:#3a3428;
+  --red:#c0392b;--red2:#e74c3c;--green:#27ae60;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{background:var(--bg);color:var(--t1);font-family:'Noto Sans TC',sans-serif;min-height:100vh;}
+
+#splash{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:opacity .5s;}
+#splash.hide{opacity:0;pointer-events:none;}
+.splash-seal{width:76px;height:76px;border:2px solid var(--gold3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Noto Serif TC',serif;font-size:26px;color:var(--gold);animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,.3);}50%{box-shadow:0 0 0 14px rgba(201,168,76,0);}}
+.splash-t{font-family:'Noto Serif TC',serif;font-size:24px;color:var(--gold);letter-spacing:6px;}
+.splash-s{font-size:11px;color:var(--t2);letter-spacing:3px;}
+.spin{width:26px;height:26px;border:2px solid var(--gold4);border-top-color:var(--gold);border-radius:50%;animation:sp .8s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.splash-msg{font-size:12px;color:var(--t2);}
+.splash-err{color:var(--red);font-size:13px;text-align:center;padding:0 32px;line-height:2;display:none;}
+
+#s-login{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 20px;}
+#s-login.on{display:flex;}
+.login-seal{width:68px;height:68px;border:1px solid var(--gold3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Noto Serif TC',serif;font-size:22px;color:var(--gold);margin-bottom:12px;}
+.login-t{font-family:'Noto Serif TC',serif;font-size:22px;color:var(--gold);letter-spacing:5px;margin-bottom:4px;}
+.login-s{font-size:11px;color:var(--t2);letter-spacing:3px;margin-bottom:32px;}
+.lbox{background:var(--bg3);border:1px solid var(--gold4);border-radius:16px;padding:26px 22px;width:100%;max-width:340px;}
+.lbox h2{font-family:'Noto Serif TC',serif;font-size:14px;color:var(--gold);letter-spacing:3px;margin-bottom:20px;text-align:center;}
+.fg{margin-bottom:14px;}
+.fg label{display:block;font-size:11px;color:var(--t2);margin-bottom:5px;letter-spacing:1px;}
+.fg input{width:100%;background:var(--bg4);border:1px solid var(--t4);border-radius:8px;color:var(--t1);font-size:15px;font-family:'Noto Sans TC',sans-serif;padding:12px 13px;outline:none;-webkit-appearance:none;transition:border-color .2s;}
+.fg input:focus{border-color:var(--gold3);}
+.btn-login{width:100%;background:linear-gradient(135deg,#6a4e0e,var(--gold));border:none;border-radius:10px;color:#1a1208;font-size:15px;font-weight:700;font-family:'Noto Sans TC',sans-serif;padding:13px;cursor:pointer;letter-spacing:3px;margin-top:4px;}
+.btn-login:disabled{opacity:.5;}
+.lerr{color:var(--red);font-size:12px;text-align:center;margin-top:10px;min-height:16px;}
+
+#s-app{display:none;}
+#s-app.on{display:block;}
+.hdr{background:linear-gradient(180deg,#0e0b06,var(--bg2));border-bottom:1px solid var(--gold4);padding:11px 15px 9px;position:sticky;top:0;z-index:300;}
+.hdr-row{display:flex;align-items:center;justify-content:space-between;}
+.hdr-logo{font-family:'Noto Serif TC',serif;font-size:16px;color:var(--gold);letter-spacing:3px;}
+.hdr-right{display:flex;align-items:center;gap:8px;}
+.rbadge{border-radius:4px;padding:2px 8px;font-size:10px;letter-spacing:1px;}
+.rb-admin{background:#2a1a08;color:#e09050;border:1px solid #5a3a10;}
+.rb-staff{background:#081828;color:#5aaae0;border:1px solid #1a4060;}
+.sync-bar{display:flex;align-items:center;gap:6px;margin-top:4px;justify-content:flex-end;}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--t3);}
+.sdot.ok{background:var(--green);}
+.sdot.err{background:var(--red);}
+.stxt{font-size:10px;color:var(--t3);}
+.stxt.ok{color:var(--green);}
+.stxt.err{color:var(--red);}
+
+.nav{display:flex;background:var(--bg2);border-bottom:1px solid var(--t4);position:sticky;top:54px;z-index:299;}
+.nav button{flex:1;padding:10px 2px;background:none;border:none;color:var(--t2);font-size:12px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;border-bottom:2px solid transparent;transition:.2s;letter-spacing:1px;}
+.nav button.on{color:var(--gold);border-bottom-color:var(--gold);}
+
+.pg{display:none;padding:13px;padding-bottom:100px;}
+.pg.on{display:block;}
+
+.card{background:var(--bg3);border:1px solid var(--t4);border-radius:12px;padding:14px;margin-bottom:10px;}
+.ctitle{font-family:'Noto Serif TC',serif;font-size:13px;color:var(--gold);letter-spacing:2px;margin-bottom:12px;}
+label{display:block;font-size:11px;color:var(--t2);margin-bottom:4px;margin-top:11px;letter-spacing:1px;}
+label:first-child{margin-top:0;}
+select,input[type=text],input[type=number],input[type=date],input[type=month],input[type=password]{
+  width:100%;background:var(--bg4);border:1px solid var(--t4);border-radius:8px;
+  color:var(--t1);font-size:14px;font-family:'Noto Sans TC',sans-serif;
+  padding:10px 12px;outline:none;-webkit-appearance:none;appearance:none;transition:border-color .2s;
+}
+select:focus,input:focus{border-color:var(--gold3);}
+option{background:var(--bg3);}
+.r2{display:flex;gap:8px;}.r2>div{flex:1;}
+
+.bgold{width:100%;background:linear-gradient(135deg,#6a4e0e,var(--gold));border:none;border-radius:10px;color:#1a1208;font-size:15px;font-weight:700;font-family:'Noto Sans TC',sans-serif;padding:13px;cursor:pointer;letter-spacing:2px;margin-top:13px;}
+.bgold:disabled{opacity:.5;cursor:not-allowed;}
+.bghost{background:none;border:1px solid var(--t4);border-radius:8px;color:var(--t2);font-size:13px;font-family:'Noto Sans TC',sans-serif;padding:8px 14px;cursor:pointer;}
+.bsm{background:none;border:1px solid var(--t4);border-radius:6px;color:var(--t2);font-size:11px;font-family:'Noto Sans TC',sans-serif;padding:4px 9px;cursor:pointer;white-space:nowrap;}
+.bsm.d{border-color:#c0392b33;color:var(--red);}
+.bsm.s{border-color:#27ae6033;color:var(--green);}
+.bsm.p{border-color:var(--gold3);color:var(--gold);}
+
+.chip{display:inline-block;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:500;white-space:nowrap;}
+.c明得堂{background:#081828;color:#5aaae0;border:1px solid #1a4060;}
+.c無名祭品{background:#280808;color:#e07070;border:1px solid #601a1a;}
+.c烹廚祭品{background:#082008;color:#70e070;border:1px solid #1a601a;}
+.c法事{background:#180828;color:#c070e0;border:1px solid #401060;}
+.c今榮租車{background:#201008;color:#e0b050;border:1px solid #604010;}
+
+.ccase{background:var(--bg3);border:1px solid var(--t4);border-radius:12px;margin-bottom:10px;overflow:hidden;}
+.ccase-hd{padding:13px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+.ccase-name{font-family:'Noto Serif TC',serif;font-size:16px;color:var(--gold);}
+.ccase-meta{font-size:11px;color:var(--t2);margin-top:3px;line-height:1.7;}
+.ccase-r{text-align:right;flex-shrink:0;margin-left:10px;}
+.ccase-total{font-size:17px;font-weight:600;}
+.ccase-sub{font-size:11px;color:var(--t2);margin-top:2px;}
+.cchips{display:flex;gap:5px;flex-wrap:wrap;padding:0 14px 11px;}
+.cbody{background:var(--bg4);border-top:1px solid var(--t4);padding:13px 14px;display:none;}
+.cbody.open{display:block;}
+.vblock{margin-bottom:12px;}
+.vblock-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.vbox{background:var(--bg5);border-radius:8px;padding:9px 11px;}
+.eline{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--t4);}
+.eline:last-child{border-bottom:none;}
+.einfo{flex:1;min-width:0;}
+.ename{font-size:13px;color:var(--t1);}
+.edetail{font-size:11px;color:var(--t2);margin-top:2px;line-height:1.7;}
+.enote{font-size:11px;color:var(--t3);font-style:italic;margin-top:1px;}
+.edate{font-size:10px;color:var(--t3);margin-top:2px;}
+.eprice{font-size:14px;color:var(--gold);font-weight:600;white-space:nowrap;}
+.vsub{display:flex;justify-content:flex-end;font-size:12px;color:var(--t2);margin-top:5px;}
+.vsub strong{color:var(--t1);margin-left:5px;}
+.arow{display:flex;gap:7px;margin-top:11px;padding-top:11px;border-top:1px solid var(--t4);flex-wrap:wrap;}
+
+.isrch{position:relative;margin-bottom:7px;}
+.isrch input{padding-left:32px;}
+.isrch::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;}
+.igrid{display:grid;grid-template-columns:1fr 1fr;gap:5px;max-height:230px;overflow-y:auto;}
+.ibtn{background:var(--bg4);border:1px solid var(--t4);border-radius:8px;color:var(--t1);padding:8px;font-size:12px;font-family:'Noto Sans TC',sans-serif;cursor:pointer;text-align:left;line-height:1.5;}
+.ibtn.sel{background:#2a2010;border-color:var(--gold3);}
+.ibtn .in{display:block;font-size:12px;}
+.ibtn .ip{display:block;color:var(--gold);font-size:11px;}
+.srow{display:flex;align-items:center;gap:7px;background:var(--bg4);border-radius:8px;padding:7px 10px;margin-bottom:5px;}
+.sname{flex:1;font-size:13px;}
+.sqty{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--t2);}
+.sqty input{width:46px;text-align:center;font-size:13px;padding:4px 6px;}
+.sprice{font-size:13px;color:var(--gold);min-width:52px;text-align:right;}
+.srem{background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;padding:0 2px;}
+
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.sbox{background:var(--bg3);border:1px solid var(--t4);border-radius:10px;padding:12px;text-align:center;}
+.snum{font-size:20px;font-weight:600;color:var(--gold);}
+.slbl{font-size:11px;color:var(--t2);margin-top:3px;}
+.sumrow{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--t4);}
+.sumrow:last-child{border-bottom:none;}
+.sumamt{color:var(--gold);font-weight:600;}
+.sumsub{font-size:11px;color:var(--t2);margin-top:2px;}
+
+.frow{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:11px;scrollbar-width:none;}
+.frow::-webkit-scrollbar{display:none;}
+.fbtn{background:var(--bg3);border:1px solid var(--t4);border-radius:18px;color:var(--t2);font-size:12px;font-family:'Noto Sans TC',sans-serif;padding:5px 12px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.fbtn.on{background:var(--gold4);border-color:var(--gold3);color:var(--gold);}
+
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:none;align-items:flex-end;}
+.overlay.open{display:flex;}
+.modal{background:var(--bg2);border-radius:18px 18px 0 0;border-top:1px solid var(--gold4);padding:20px 16px;width:100%;max-height:93vh;overflow-y:auto;}
+.modal::before{content:'';display:block;width:34px;height:3px;background:var(--t4);border-radius:2px;margin:0 auto 16px;}
+.mtitle{font-family:'Noto Serif TC',serif;font-size:15px;color:var(--gold);letter-spacing:2px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
+.mclose{background:none;border:none;color:var(--t2);font-size:22px;cursor:pointer;padding:0;}
+
+.divider{height:1px;background:var(--t4);margin:11px 0;}
+.bpaid{display:inline-block;background:rgba(39,174,96,.15);color:var(--green);border-radius:4px;padding:1px 7px;font-size:10px;border:1px solid rgba(39,174,96,.3);}
+.bunpaid{display:inline-block;background:rgba(192,57,43,.15);color:var(--red2);border-radius:4px;padding:1px 7px;font-size:10px;border:1px solid rgba(192,57,43,.3);}
+.empty{text-align:center;padding:44px 16px;color:var(--t2);font-size:14px;line-height:2.5;}
+.urow{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--t4);}
+.urow:last-child{border-bottom:none;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(18px);background:var(--gold);color:#1a1208;border-radius:22px;padding:10px 22px;font-size:13px;font-weight:700;opacity:0;transition:.25s;z-index:9999;white-space:nowrap;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <div class="splash-seal">祥</div>
+  <div class="splash-t">祥安生命</div>
+  <div class="splash-s">葬儀帳款管理系統</div>
+  <div class="spin"></div>
+  <div class="splash-msg" id="splashMsg">連接雲端資料庫...</div>
+  <div class="splash-err" id="splashErr"></div>
+</div>
+
+<div id="s-login">
+  <div class="login-seal">祥</div>
+  <div class="login-t">祥安生命</div>
+  <div class="login-s">葬儀帳款管理系統</div>
+  <div class="lbox">
+    <h2>員　工　登　入</h2>
+    <div class="fg"><label>帳　號</label><input id="lu" type="text" placeholder="輸入帳號" autocomplete="username"></div>
+    <div class="fg"><label>密　碼</label><input id="lp" type="password" placeholder="輸入密碼" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">登　入</button>
+    <div class="lerr" id="lerr"></div>
+  </div>
+</div>
+
+<div id="s-app">
+  <div class="hdr">
+    <div class="hdr-row">
+      <div class="hdr-logo">祥安帳款</div>
+      <div class="hdr-right">
+        <span style="font-size:12px;color:var(--t2)" id="hname"></span>
+        <span class="rbadge" id="hrole"></span>
+        <button class="bsm" onclick="doLogout()">登出</button>
+      </div>
+    </div>
+    <div class="sync-bar">
+      <div class="sdot" id="sdot"></div>
+      <div class="stxt" id="stxt">連線中...</div>
+    </div>
+  </div>
+  <div class="nav">
+    <button class="on" onclick="showPg('cases')">📋 案件</button>
+    <button onclick="showPg('stats')">📊 統計</button>
+    <button id="adminTab" onclick="showPg('admin')" style="display:none">⚙️ 管理</button>
+  </div>
+
+  <div id="pg-cases" class="pg on">
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <input type="text" id="qcase" placeholder="🔍 搜尋亡者姓名..." oninput="renderCases()" style="flex:1;">
+      <select id="qstatus" onchange="renderCases()" style="width:88px;">
+        <option value="">全部</option><option value="0">未結清</option><option value="1">已結清</option>
+      </select>
+    </div>
+    <div class="frow" id="cMonthF"></div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+      <button class="bghost" onclick="openNewCase()">＋ 新增案件</button>
+    </div>
+    <div id="caseList"></div>
+  </div>
+
+  <div id="pg-stats" class="pg">
+    <div class="frow" id="sMonthF"></div>
+    <div class="sgrid" id="sgrid"></div>
+    <div class="card"><div class="ctitle">廠商統計</div><div id="vstats"></div></div>
+    <div class="card"><div class="ctitle">月份統計</div><div id="mstats"></div></div>
+  </div>
+
+  <div id="pg-admin" class="pg">
+    <div class="card">
+      <div class="ctitle">帳號管理</div>
+      <div id="ulist"></div>
+      <button class="bghost" style="margin-top:12px;width:100%;" onclick="openAddUser()">＋ 新增員工帳號</button>
+    </div>
+    <div class="card">
+      <div class="ctitle">資料備份</div>
+      <button class="bghost" style="width:100%;margin-bottom:8px;" onclick="exportData()">📤 匯出全部資料</button>
+      <button class="bghost" style="width:100%;" onclick="document.getElementById('impf').click()">📥 匯入備份資料</button>
+      <input type="file" id="impf" accept=".json" style="display:none;" onchange="importData(event)">
+    </div>
+  </div>
+</div>
+
+<!-- 新增案件 -->
+<div class="overlay" id="mNewCase">
+  <div class="modal">
+    <div class="mtitle">新增案件 <button class="mclose" onclick="closeM('mNewCase')">✕</button></div>
+    <label>亡者姓名</label><input type="text" id="nc-n" placeholder="例：陳呂玉麵">
+    <div class="r2">
+      <div><label>往生日期</label><input type="date" id="nc-d"></div>
+      <div><label>帳款月份</label><input type="month" id="nc-m"></div>
+    </div>
+    <label>承辦人員</label><input type="text" id="nc-s">
+    <label>備註</label><input type="text" id="nc-note" placeholder="選填">
+    <button class="bgold" id="btnNC" onclick="saveNewCase()">建立案件</button>
+  </div>
+</div>
+
+<!-- 新增費用 -->
+<div class="overlay" id="mAddExp">
+  <div class="modal">
+    <div class="mtitle" id="expTitle">新增費用 <button class="mclose" onclick="closeM('mAddExp')">✕</button></div>
+    <label>廠商類別</label>
+    <select id="ev" onchange="onEV()">
+      <option value="">— 選擇廠商 —</option>
+      <option>明得堂</option><option>無名祭品</option><option>烹廚祭品</option><option>法事</option><option>今榮租車</option>
+    </select>
+    <label>費用說明</label>
+    <input type="text" id="el" placeholder="例：頭七法事、三牲四果">
+    <div id="eIsec" style="display:none;margin-top:11px;">
+      <div style="font-size:12px;color:var(--t2);margin-bottom:7px;">從品項選擇</div>
+      <div class="isrch"><input type="text" id="esrch" placeholder="搜尋品項..." oninput="renderEItems()"></div>
+      <div class="igrid" id="egrid"></div>
+      <div id="eselblk"></div>
+      <div class="divider"></div>
+      <div style="font-size:12px;color:var(--t2);margin-bottom:7px;">自訂品項</div>
+      <div class="r2">
+        <div><input type="text" id="ecn" placeholder="品項名稱"></div>
+        <div><input type="number" id="ecp" placeholder="單價"></div>
+      </div>
+      <button class="bghost" style="margin-top:6px;width:100%;" onclick="addEC()">＋ 加入</button>
+    </div>
+    <div class="r2" style="margin-top:11px;">
+      <div><label>金額（元）</label><input type="number" id="eamt" placeholder="0"></div>
+      <div><label>日期</label><input type="date" id="edate"></div>
+    </div>
+    <label>備註</label><input type="text" id="enote" placeholder="選填">
+    <button class="bgold" id="eSaveBtn" onclick="saveExp()">✓ 儲存費用</button>
+  </div>
+</div>
+
+<!-- 新增帳號 -->
+<div class="overlay" id="mAddUser">
+  <div class="modal">
+    <div class="mtitle">新增帳號 <button class="mclose" onclick="closeM('mAddUser')">✕</button></div>
+    <label>姓名</label><input type="text" id="un-name" placeholder="例：小美">
+    <label>帳號</label><input type="text" id="un-user" placeholder="英文帳號，例：mei">
+    <label>密碼</label><input type="password" id="un-pass" placeholder="至少6位">
+    <label>角色</label>
+    <select id="un-role">
+      <option value="staff">員工（可新增，不可刪除）</option>
+      <option value="admin">老闆（完整權限）</option>
+    </select>
+    <button class="bgold" onclick="saveUser()">建立帳號</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, remove, onValue, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ★ 已套好你的 Firebase 設定 ★
+const firebaseConfig = {
+  apiKey:            "AIzaSyBgQDHep1lmUOWKVFH49KOMR7UXN0mpc3Y",
+  authDomain:        "xiang-an.firebaseapp.com",
+  databaseURL:       "https://xiang-an-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:         "xiang-an",
+  storageBucket:     "xiang-an.firebasestorage.app",
+  messagingSenderId: "425752456731",
+  appId:             "1:425752456731:web:e1b8edb73eabe7466a12be"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+window._ref = (...a) => ref(db, ...a);
+window._set = set;
+window._get = get;
+window._remove = remove;
+window._onValue = onValue;
+document.dispatchEvent(new Event('fb-ready'));
+</script>
+
+<script>
+const VI = {
+  '明得堂':[
+    {n:'九朵蓮花盤',u:'組',p:140},{n:'九色九朵蓮花(3朵1串3串)',u:'組',p:360},
+    {n:'蓮花(3朵一串)(3串9朵)',u:'組',p:180},{n:'蓮花寶塔巨無霸',u:'對',p:1550},
+    {n:'紅迷你108蓮花被',u:'件',p:500},{n:'冥財箱',u:'箱',p:170},
+    {n:'庫錢(萬善堂含清潔費)',u:'包',p:85},{n:'D庫錢(箱)-長程',u:'箱',p:55},
+    {n:'庫錢(東丰火爐含清潔費)',u:'包',p:85},{n:'功德紙錢(三色金)',u:'份',p:150},
+    {n:'明-LN錢箱(NT:1000)',u:'個',p:400},{n:'薄黑長袍4尺',u:'件',p:60},
+    {n:'薄黑長袍4.5尺',u:'件',p:60},{n:'薄黑袍5尺',u:'件',p:60},
+    {n:'薄黑袍2.5尺',u:'件',p:60},{n:'薄黑袍3尺',u:'件',p:60},
+    {n:'男西裝-黑',u:'套',p:650},{n:'男西裝-黑條',u:'套',p:650},
+    {n:'男西裝-灰',u:'套',p:650},{n:'男西裝/5L加大',u:'套',p:1200},
+    {n:'彩色絲衣袱-棗紅金',u:'件',p:700},{n:'彩色絲衣袱-粉',u:'套',p:1200},
+    {n:'彩色絲壽鞋-女',u:'雙',p:150},{n:'希-華麗別墅',u:'間',p:1920},
+    {n:'希-華麗別墅+浪漫花園',u:'組',p:4400},{n:'希-三星手機組',u:'盒',p:450},
+    {n:'希-平板電腦',u:'盒',p:600},{n:'希-文房四寶禮盒',u:'組',p:1600},
+    {n:'希-按摩椅',u:'台',p:1400},{n:'萬-運動鞋(耐吉)',u:'雙',p:150},
+    {n:'小魂身(男/女)',u:'個',p:0},{n:'湯圓/八寶粥(贈送)',u:'份',p:0},
+    {n:'往生被',u:'件',p:50},{n:'(24H)905環保龍王香環',u:'盒',p:60},
+    {n:'高級香環架(金色)',u:'個',p:140},{n:'點-2號屋紙紮屋富貴名園',u:'間',p:2500},
+    {n:'7903三色毛巾+提袋(祥安)',u:'組',p:38},{n:'9007兔子無燃毛巾+皂紙盒',u:'盒',p:100},
+    {n:'1605繡紗布小方巾',u:'條',p:40},{n:'2368雨傘毛巾+提袋',u:'組',p:45},
+    {n:'老船長(小)青白禮盒',u:'盒',p:180},{n:'300ml竹炭瓶水',u:'箱',p:90},
+    {n:'粉雙連(B1)',u:'包',p:100},{n:'小銀56支',u:'件',p:220},
+    {n:'無字-1斤安斗燭(白)',u:'對',p:75},{n:'無字-1斤安斗燭(紅)',u:'對',p:75},
+    {n:'金釘子+紅布',u:'支',p:20},{n:'白色手尾錢-伸縮帶',u:'包',p:300},
+    {n:'藍色手尾錢-伸縮帶',u:'包',p:300},{n:'正-黃金杜拜箱',u:'個',p:1500},
+    {n:'抹草濕紙(良友)',u:'盒',p:200},{n:'空毛巾紙盒',u:'個',p:6},
+    {n:'清潔費/萬善堂/房.蓮花',u:'筆',p:900},{n:'清潔費/萬善堂/房',u:'筆',p:600},
+    {n:'雙色緞/旗袍外套',u:'套',p:700},{n:'六菜湯飯組',u:'付',p:1600},
+  ],
+  '無名祭品':[
+    {n:'大五牲',u:'付',p:1800},{n:'外家大五牲',u:'付',p:1800},
+    {n:'素大五牲',u:'付',p:1200},{n:'葷三牲',u:'付',p:900},
+    {n:'素三牲',u:'付',p:700},{n:'素三盤',u:'付',p:700},
+    {n:'生小三牲',u:'付',p:150},{n:'葷十二菜碗(紙碗)',u:'付',p:400},
+    {n:'葷十二菜碗(瓷碗)',u:'付',p:750},{n:'素十二菜碗(紙碗)',u:'付',p:400},
+    {n:'素十二菜碗(瓷碗)',u:'付',p:750},{n:'葷六菜碗(紙碗)',u:'付',p:250},
+    {n:'葷六菜碗(瓷碗)',u:'付',p:425},{n:'素六菜碗(紙碗)',u:'付',p:250},
+    {n:'素六菜碗(瓷碗)',u:'付',p:425},{n:'素盤',u:'盤',p:250},
+    {n:'四果',u:'份',p:400},{n:'水果塔',u:'盤',p:350},
+    {n:'綜合水果',u:'盤',p:180},{n:'大發糕+大蛋糕',u:'組',p:300},
+    {n:'大蛋糕',u:'個',p:150},{n:'小發糕',u:'個',p:40},
+    {n:'紅圓',u:'個',p:40},{n:'紅龜',u:'個',p:40},
+    {n:'湯圓三碗',u:'份',p:90},{n:'冥財箱',u:'份',p:250},
+    {n:'功德紙錢(三色金)',u:'份',p:150},{n:'蓮花九朵',u:'串',p:170},
+    {n:'瓶花',u:'對',p:250},{n:'米飯',u:'鍋',p:200},
+    {n:'茶',u:'瓶',p:25},{n:'酒',u:'瓶',p:50},
+    {n:'水',u:'瓶',p:10},{n:'飯',u:'碗',p:10},
+    {n:'米',u:'包',p:200},{n:'瓶水',u:'箱',p:120},
+    {n:'六菜湯飯組',u:'付',p:1600},
+  ],
+  '烹廚祭品':[
+    {n:'辦桌全席(10人桌)',u:'桌',p:0},{n:'半桌菜(5人份)',u:'桌',p:0},
+    {n:'滷肉飯便當',u:'個',p:0},{n:'素食便當',u:'個',p:0},
+    {n:'麵條(大鍋)',u:'鍋',p:0},{n:'米粉湯(大鍋)',u:'鍋',p:0},
+    {n:'白斬雞',u:'隻',p:0},{n:'控肉',u:'份',p:0},
+  ],
+  '法事':[
+    {n:'頭七法事',u:'場',p:0},{n:'二七法事',u:'場',p:0},
+    {n:'三七法事',u:'場',p:0},{n:'四七法事',u:'場',p:0},
+    {n:'五七法事',u:'場',p:0},{n:'六七法事',u:'場',p:0},
+    {n:'滿七法事',u:'場',p:0},{n:'百日法事',u:'場',p:0},
+    {n:'對年法事',u:'場',p:0},{n:'做功德(一日)',u:'場',p:0},
+    {n:'做功德(二日)',u:'場',p:0},{n:'燒庫錢',u:'場',p:0},
+    {n:'誦經(一堂)',u:'堂',p:0},{n:'普渡法事',u:'場',p:0},
+    {n:'超渡牌位',u:'份',p:0},{n:'出殯儀式',u:'場',p:0},
+    {n:'安神位',u:'次',p:0},
+  ],
+  '今榮租車':[
+    {n:'靈車(一般)',u:'趟',p:0},{n:'靈車(長程)',u:'趟',p:0},
+    {n:'禮車(家屬)',u:'輛',p:0},{n:'遊覽車',u:'輛',p:0},
+    {n:'冷凍車',u:'天',p:0},{n:'停車費',u:'次',p:0},
+    {n:'高速公路過路費',u:'次',p:0},
+  ],
+};
+
+let CU=null,cases={},users={},activeCID=null,eSel=[],cMonth='all',sMonth='all',unsub=null;
+
+const dbR  = (...p) => window._ref(...p);
+const dbGet = p => window._get(dbR(p)).then(s=>s.val());
+const dbSet = (p,v) => window._set(dbR(p),v);
+const dbDel = p => window._remove(dbR(p));
+
+function setSync(msg,ok){
+  document.getElementById('sdot').className='sdot'+(ok===true?' ok':ok===false?' err':'');
+  document.getElementById('stxt').className='stxt'+(ok===true?' ok':ok===false?' err':'');
+  document.getElementById('stxt').textContent=msg;
+}
+
+document.addEventListener('fb-ready', async ()=>{
+  try {
+    document.getElementById('splashMsg').textContent='連接雲端資料庫...';
+    // 初始化帳號
+    const u = await dbGet('users');
+    if(!u){
+      await dbSet('users',{
+        admin: {id:'admin', name:'老闆',   username:'admin',  password:'boss1234', role:'admin'},
+        staff1:{id:'staff1',name:'員工一', username:'staff1', password:'staff123', role:'staff'},
+      });
+    }
+    users = await dbGet('users') || {};
+    document.getElementById('splashMsg').textContent='連線成功！';
+    setTimeout(()=>{
+      document.getElementById('splash').classList.add('hide');
+      setTimeout(()=>document.getElementById('splash').style.display='none',500);
+    },700);
+    const sid = sessionStorage.getItem('xa_sid');
+    const found = Object.values(users).find(u=>u.id===sid);
+    if(found){loginAs(found);return;}
+    document.getElementById('s-login').classList.add('on');
+  } catch(e) {
+    document.querySelector('.spin').style.display='none';
+    document.getElementById('splashMsg').style.display='none';
+    const err=document.getElementById('splashErr');
+    err.style.display='block';
+    err.textContent='⚠️ 連線失敗：'+e.message+'\n\n請確認 Firebase Realtime Database 已啟用';
+  }
+});
+
+async function doLogin(){
+  const u=document.getElementById('lu').value.trim();
+  const p=document.getElementById('lp').value;
+  const btn=document.getElementById('loginBtn');
+  btn.disabled=true;btn.textContent='登入中...';
+  const found=Object.values(users).find(x=>x.username===u&&x.password===p);
+  btn.disabled=false;btn.textContent='登　入';
+  if(!found){document.getElementById('lerr').textContent='帳號或密碼錯誤';return;}
+  document.getElementById('lerr').textContent='';
+  loginAs(found);
+}
+
+function loginAs(user){
+  CU=user;
+  sessionStorage.setItem('xa_sid',user.id);
+  document.getElementById('s-login').classList.remove('on');
+  document.getElementById('s-app').classList.add('on');
+  document.getElementById('hname').textContent=user.name;
+  const rb=document.getElementById('hrole');
+  rb.textContent=user.role==='admin'?'老闆':'員工';
+  rb.className='rbadge '+(user.role==='admin'?'rb-admin':'rb-staff');
+  if(user.role==='admin')document.getElementById('adminTab').style.display='';
+  startSync();
+}
+
+function doLogout(){
+  sessionStorage.removeItem('xa_sid');
+  if(unsub)unsub();
+  CU=null;cases={};
+  document.getElementById('s-app').classList.remove('on');
+  document.getElementById('s-login').classList.add('on');
+  document.getElementById('lu').value='';
+  document.getElementById('lp').value='';
+}
+
+function startSync(){
+  setSync('同步中...',null);
+  if(unsub)unsub();
+  unsub=window._onValue(dbR('cases'),snap=>{
+    cases=snap.val()||{};
+    const t=new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
+    setSync('即時同步 '+t,true);
+    renderCases();renderStats();
+  },()=>setSync('連線中斷，請重整',false));
+}
+
+function openNewCase(){
+  const t=new Date();
+  ['nc-n','nc-note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('nc-s').value=CU.name;
+  document.getElementById('nc-d').value=t.toISOString().split('T')[0];
+  document.getElementById('nc-m').value=t.toISOString().substring(0,7);
+  openM('mNewCase');
+}
+
+async function saveNewCase(){
+  const name=document.getElementById('nc-n').value.trim();
+  if(!name){showToast('請輸入亡者姓名');return;}
+  const btn=document.getElementById('btnNC');
+  btn.disabled=true;btn.textContent='建立中...';
+  const key='C'+Date.now();
+  await dbSet('cases/'+key,{
+    id:key,name,
+    date:document.getElementById('nc-d').value,
+    month:document.getElementById('nc-m').value,
+    staff:document.getElementById('nc-s').value.trim()||CU.name,
+    note:document.getElementById('nc-note').value.trim(),
+    paid:false,expenses:{},
+    createdBy:CU.name,createdAt:new Date().toISOString()
+  });
+  btn.disabled=false;btn.textContent='建立案件';
+  closeM('mNewCase');showToast('✓ 案件已建立');
+}
+
+async function deleteCase(id){
+  if(CU.role!=='admin'){showToast('⚠️ 僅老闆可刪除');return;}
+  if(!confirm('確定刪除此案件？'))return;
+  await dbDel('cases/'+id);showToast('已刪除');
+}
+
+async function togglePaid(id){
+  if(CU.role!=='admin'){showToast('⚠️ 僅老闆可操作');return;}
+  await dbSet('cases/'+id+'/paid',!(cases[id]&&cases[id].paid));
+}
+
+function openAddExp(cid){
+  activeCID=cid;eSel=[];
+  const c=cases[cid];
+  document.getElementById('expTitle').innerHTML=
+    `<span style="color:var(--gold2);font-size:13px">${c.name}</span>　新增費用
+     <button class="mclose" onclick="closeM('mAddExp')">✕</button>`;
+  ['ev','el','eamt','enote','esrch','ecn','ecp'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('edate').value=new Date().toISOString().split('T')[0];
+  document.getElementById('eIsec').style.display='none';
+  document.getElementById('egrid').innerHTML='';
+  document.getElementById('eselblk').innerHTML='';
+  openM('mAddExp');
+}
+
+function onEV(){
+  eSel=[];
+  const v=document.getElementById('ev').value;
+  document.getElementById('esrch').value='';
+  document.getElementById('eIsec').style.display=v?'block':'none';
+  if(v)renderEItems();
+  renderESel();recalcE();
+}
+
+function renderEItems(){
+  const v=document.getElementById('ev').value;
+  const q=document.getElementById('esrch').value;
+  const items=(VI[v]||[]).filter(it=>!q||it.n.includes(q));
+  document.getElementById('egrid').innerHTML=items.map(it=>{
+    const gi=(VI[v]||[]).findIndex(x=>x.n===it.n);
+    const sel=eSel.find(s=>s.name===it.n&&!s.custom);
+    return `<button class="ibtn ${sel?'sel':''}" onclick="toggleEI(${gi})">
+      <span class="in">${it.n}</span>
+      <span class="ip">${it.u}${it.p>0?' $'+it.p:' (另計)'}</span>
+    </button>`;
+  }).join('');
+}
+
+function toggleEI(i){
+  const v=document.getElementById('ev').value;
+  const it=(VI[v]||[])[i];if(!it)return;
+  const idx=eSel.findIndex(s=>s.name===it.n&&!s.custom);
+  if(idx>=0)eSel.splice(idx,1);
+  else eSel.push({name:it.n,price:it.p,qty:1,unit:it.u,custom:false});
+  renderEItems();renderESel();recalcE();
+}
+
+function addEC(){
+  const name=document.getElementById('ecn').value.trim();
+  const price=parseFloat(document.getElementById('ecp').value)||0;
+  if(!name){showToast('請輸入品項名稱');return;}
+  eSel.push({name,price,qty:1,unit:'',custom:true});
+  document.getElementById('ecn').value='';
+  document.getElementById('ecp').value='';
+  renderESel();recalcE();
+}
+
+function removeEI(i){const it=eSel[i];eSel.splice(i,1);if(!it.custom)renderEItems();renderESel();recalcE();}
+function changeEQ(i,v){eSel[i].qty=Math.max(1,parseInt(v)||1);recalcE();}
+
+function renderESel(){
+  const div=document.getElementById('eselblk');
+  if(!eSel.length){div.innerHTML='';return;}
+  div.innerHTML=`<div class="divider"></div>`+eSel.map((s,i)=>`
+    <div class="srow">
+      <span class="sname">${s.name}</span>
+      <div class="sqty"><span>數量</span><input type="number" value="${s.qty}" min="1" oninput="changeEQ(${i},this.value)"></div>
+      <span class="sprice">${s.price>0?'$'+(s.price*s.qty):'-'}</span>
+      <button class="srem" onclick="removeEI(${i})">✕</button>
+    </div>`).join('');
+}
+
+function recalcE(){
+  const t=eSel.reduce((s,it)=>s+(it.price*it.qty),0);
+  if(t>0)document.getElementById('eamt').value=t;
+}
+
+async function saveExp(){
+  if(!activeCID)return;
+  const vendor=document.getElementById('ev').value;
+  const label=document.getElementById('el').value.trim();
+  const amount=parseFloat(document.getElementById('eamt').value)||0;
+  const date=document.getElementById('edate').value;
+  const note=document.getElementById('enote').value.trim();
+  if(!vendor){showToast('請選擇廠商');return;}
+  if(!label&&!eSel.length){showToast('請輸入費用說明或選擇品項');return;}
+  if(!amount&&!eSel.length){showToast('請輸入金額');return;}
+  const btn=document.getElementById('eSaveBtn');
+  btn.disabled=true;btn.textContent='儲存中...';
+  const key='E'+Date.now();
+  await dbSet('cases/'+activeCID+'/expenses/'+key,{
+    id:key,vendor,
+    label:label||eSel.map(s=>s.name).join('、'),
+    amount,date,note,items:eSel,
+    addedBy:CU.name,addedAt:new Date().toISOString()
+  });
+  btn.disabled=false;btn.textContent='✓ 儲存費用';
+  closeM('mAddExp');showToast('✓ 費用已新增');
+}
+
+async function deleteExp(cid,eid){
+  if(CU.role!=='admin'){showToast('⚠️ 僅老闆可刪除');return;}
+  await dbDel('cases/'+cid+'/expenses/'+eid);showToast('已刪除');
+}
+
+function renderCases(){
+  const arr=Object.values(cases);
+  const months=[...new Set(arr.map(c=>c.month))].filter(Boolean).sort().reverse();
+  document.getElementById('cMonthF').innerHTML=
+    `<button class="fbtn ${cMonth==='all'?'on':''}" onclick="setCM('all')">全部</button>`
+    +months.map(m=>`<button class="fbtn ${cMonth===m?'on':''}" onclick="setCM('${m}')">${m.replace('-','年')}月</button>`).join('');
+  const q=document.getElementById('qcase').value.trim();
+  const fs=document.getElementById('qstatus').value;
+  let f=arr;
+  if(cMonth!=='all')f=f.filter(c=>c.month===cMonth);
+  if(q)f=f.filter(c=>c.name&&c.name.includes(q));
+  if(fs!=='')f=f.filter(c=>c.paid===(fs==='1'));
+  f.sort((a,b)=>(b.createdAt||'')>(a.createdAt||'')?1:-1);
+  const list=document.getElementById('caseList');
+  if(!f.length){list.innerHTML=`<div class="empty">🕯️<br>尚無案件<br>點右上角「新增案件」開始</div>`;return;}
+  list.innerHTML=f.map(c=>renderCCard(c)).join('');
+}
+
+function setCM(m){cMonth=m;renderCases();}
+
+function renderCCard(c){
+  const exps=Object.values(c.expenses||{});
+  const total=exps.reduce((s,e)=>s+(e.amount||0),0);
+  const vendors=[...new Set(exps.map(e=>e.vendor))];
+  const vg={};
+  exps.forEach(e=>{if(!vg[e.vendor])vg[e.vendor]=[];vg[e.vendor].push(e);});
+  const isA=CU.role==='admin';
+  const body=Object.entries(vg).map(([vn,es])=>{
+    const vs=es.reduce((s,e)=>s+(e.amount||0),0);
+    return `<div class="vblock">
+      <div class="vblock-hd">
+        <span class="chip c${vn}">${vn}</span>
+        <span style="font-size:12px;color:var(--t2)">小計 <strong style="color:var(--t1)">$${vs.toLocaleString()}</strong></span>
+      </div>
+      <div class="vbox">
+        ${es.map(e=>`<div class="eline">
+          <div class="einfo">
+            <div class="ename">${e.label||''}</div>
+            ${e.items&&e.items.length?`<div class="edetail">${e.items.map(it=>`${it.name}${(it.qty||1)>1?'×'+it.qty:''}`).join('　')}</div>`:''}
+            ${e.note?`<div class="enote">${e.note}</div>`:''}
+            <div class="edate">${e.date||''}　${e.addedBy||''}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;flex-shrink:0">
+            <span class="eprice">${e.amount>0?'$'+e.amount.toLocaleString():'-'}</span>
+            ${isA?`<button class="bsm d" onclick="event.stopPropagation();deleteExp('${c.id}','${e.id}')">刪</button>`:''}
+          </div>
+        </div>`).join('')}
+      </div>
+      <div class="vsub">廠商小計<strong>$${vs.toLocaleString()}</strong></div>
+    </div>`;
+  }).join('')||`<div style="color:var(--t2);font-size:13px;text-align:center;padding:14px 0">尚無費用，點下方新增</div>`;
+
+  return `<div class="ccase">
+    <div onclick="toggleBody('${c.id}')">
+      <div class="ccase-hd">
+        <div>
+          <div class="ccase-name">${c.name}
+            ${c.paid?'<span class="bpaid">已結清</span>':'<span class="bunpaid">未結清</span>'}
+          </div>
+          <div class="ccase-meta">${c.date||''}${c.staff?'　承辦：'+c.staff:''}${c.note?'　'+c.note:''}</div>
+        </div>
+        <div class="ccase-r">
+          <div class="ccase-total">$${total.toLocaleString()}</div>
+          <div class="ccase-sub">${exps.length}筆　▾</div>
+        </div>
+      </div>
+      <div class="cchips">
+        ${vendors.map(v=>`<span class="chip c${v}">${v}</span>`).join('')}
+        ${!vendors.length?'<span style="font-size:12px;color:var(--t3)">點擊展開</span>':''}
+      </div>
+    </div>
+    <div class="cbody" id="cb-${c.id}">
+      ${body}
+      <div class="arow">
+        <button class="bsm p" onclick="openAddExp('${c.id}')">＋ 新增費用</button>
+        ${isA?`<button class="bsm s" onclick="togglePaid('${c.id}')">${c.paid?'↩ 取消結清':'✓ 標記已結清'}</button>`:''}
+        ${isA?`<button class="bsm d" onclick="deleteCase('${c.id}')">刪除案件</button>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleBody(id){document.getElementById('cb-'+id).classList.toggle('open');}
+
+function renderStats(){
+  const arr=Object.values(cases);
+  const months=[...new Set(arr.map(c=>c.month))].filter(Boolean).sort().reverse();
+  document.getElementById('sMonthF').innerHTML=
+    `<button class="fbtn ${sMonth==='all'?'on':''}" onclick="setSM('all')">全部</button>`
+    +months.map(m=>`<button class="fbtn ${sMonth===m?'on':''}" onclick="setSM('${m}')">${m.replace('-','年')}月</button>`).join('');
+  const fc=sMonth==='all'?arr:arr.filter(c=>c.month===sMonth);
+  const allE=fc.flatMap(c=>Object.values(c.expenses||{}));
+  const total=allE.reduce((s,e)=>s+(e.amount||0),0);
+  const unpaid=fc.filter(c=>!c.paid).flatMap(c=>Object.values(c.expenses||{})).reduce((s,e)=>s+(e.amount||0),0);
+  document.getElementById('sgrid').innerHTML=`
+    <div class="sbox"><div class="snum">$${total.toLocaleString()}</div><div class="slbl">總金額</div></div>
+    <div class="sbox"><div class="snum" style="color:var(--red2)">$${unpaid.toLocaleString()}</div><div class="slbl">未結清</div></div>
+    <div class="sbox"><div class="snum">${fc.length}</div><div class="slbl">案件數</div></div>
+    <div class="sbox"><div class="snum">${allE.length}</div><div class="slbl">費用筆數</div></div>`;
+  const vMap={};
+  allE.forEach(e=>{if(!vMap[e.vendor])vMap[e.vendor]={t:0,n:0};vMap[e.vendor].t+=(e.amount||0);vMap[e.vendor].n++;});
+  document.getElementById('vstats').innerHTML=Object.entries(vMap).sort((a,b)=>b[1].t-a[1].t)
+    .map(([v,d])=>`<div class="sumrow">
+      <span class="chip c${v}">${v}</span>
+      <div style="text-align:right"><div class="sumamt">$${d.t.toLocaleString()}</div><div class="sumsub">${d.n}筆</div></div>
+    </div>`).join('')||'<div class="empty" style="padding:20px">尚無資料</div>';
+  const mMap={};
+  arr.forEach(c=>{
+    const m=c.month||'未知';
+    if(!mMap[m])mMap[m]={t:0,u:0,n:0};
+    const ct=Object.values(c.expenses||{}).reduce((s,e)=>s+(e.amount||0),0);
+    mMap[m].t+=ct;mMap[m].n++;if(!c.paid)mMap[m].u+=ct;
+  });
+  document.getElementById('mstats').innerHTML=Object.entries(mMap).sort((a,b)=>b[0].localeCompare(a[0]))
+    .map(([m,d])=>`<div class="sumrow">
+      <div><div style="font-size:14px">${m.replace('-','年')}月</div><div class="sumsub">${d.n}件　未結清 $${d.u.toLocaleString()}</div></div>
+      <div class="sumamt">$${d.t.toLocaleString()}</div>
+    </div>`).join('')||'<div class="empty" style="padding:20px">尚無資料</div>';
+}
+
+function setSM(m){sMonth=m;renderStats();}
+
+function renderUList(){
+  document.getElementById('ulist').innerHTML=Object.values(users).map(u=>`
+    <div class="urow">
+      <div><div style="font-size:14px">${u.name}</div>
+      <div style="font-size:11px;color:var(--t2)">@${u.username}　${u.role==='admin'?'老闆':'員工'}</div></div>
+      ${u.id!==CU.id?`<button class="bsm d" onclick="deleteUser('${u.id}')">刪除</button>`:'<span style="font-size:11px;color:var(--t3)">本人</span>'}
+    </div>`).join('');
+}
+
+function openAddUser(){
+  ['un-name','un-user','un-pass'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('un-role').value='staff';
+  openM('mAddUser');
+}
+
+async function saveUser(){
+  const name=document.getElementById('un-name').value.trim();
+  const username=document.getElementById('un-user').value.trim().toLowerCase();
+  const password=document.getElementById('un-pass').value;
+  const role=document.getElementById('un-role').value;
+  if(!name||!username||!password){showToast('請填寫完整');return;}
+  if(password.length<6){showToast('密碼至少6位');return;}
+  if(Object.values(users).find(u=>u.username===username)){showToast('帳號已存在');return;}
+  await dbSet('users/'+username,{id:username,name,username,password,role});
+  users=await dbGet('users');
+  closeM('mAddUser');showToast('✓ 帳號已建立');renderUList();
+}
+
+async function deleteUser(id){
+  if(!confirm('確定刪除？'))return;
+  await dbDel('users/'+id);
+  users=await dbGet('users');
+  renderUList();showToast('已刪除');
+}
+
+function exportData(){
+  const blob=new Blob([JSON.stringify({cases,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`祥安帳款_${new Date().toISOString().substring(0,10)}.json`;
+  a.click();
+}
+
+async function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async ev=>{
+    try{const d=JSON.parse(ev.target.result);if(d.cases)await dbSet('cases',d.cases);showToast('✓ 匯入成功');}
+    catch{showToast('❌ 格式錯誤');}
+  };
+  reader.readAsText(file);e.target.value='';
+}
+
+function showPg(p){
+  document.querySelectorAll('.pg').forEach(el=>el.classList.remove('on'));
+  document.querySelectorAll('.nav button').forEach(el=>el.classList.remove('on'));
+  document.getElementById('pg-'+p).classList.add('on');
+  document.querySelectorAll('.nav button')[{cases:0,stats:1,admin:2}[p]].classList.add('on');
+  if(p==='stats')renderStats();
+  if(p==='admin')renderUList();
+}
+function openM(id){document.getElementById(id).classList.add('open');}
+function closeM(id){document.getElementById(id).classList.remove('open');}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+</script>
+</body>
+</html>
