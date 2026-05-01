@@ -89,11 +89,13 @@ option{background:var(--bg3);}
 .bsm.s{border-color:#27ae6033;color:var(--green);}
 .bsm.p{border-color:var(--gold3);color:var(--gold);}
 
+/* 廠商顏色標籤 */
 .chip{display:inline-block;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:500;white-space:nowrap;}
 .c明得堂{background:#081828;color:#5aaae0;border:1px solid #1a4060;}
 .c無名祭品{background:#280808;color:#e07070;border:1px solid #601a1a;}
 .c烹廚祭品{background:#082008;color:#70e070;border:1px solid #1a601a;}
 .c法事{background:#180828;color:#c070e0;border:1px solid #401060;}
+.c骨灰罐{background:#1a1208;color:#d4a843;border:1px solid #5a3e10;}
 .c今榮租車{background:#201008;color:#e0b050;border:1px solid #604010;}
 
 .ccase{background:var(--bg3);border:1px solid var(--t4);border-radius:12px;margin-bottom:10px;overflow:hidden;}
@@ -270,7 +272,12 @@ option{background:var(--bg3);}
     <label>廠商類別</label>
     <select id="ev" onchange="onEV()">
       <option value="">— 選擇廠商 —</option>
-      <option>明得堂</option><option>無名祭品</option><option>烹廚祭品</option><option>法事</option><option>今榮租車</option>
+      <option>明得堂</option>
+      <option>無名祭品</option>
+      <option>烹廚祭品</option>
+      <option>法事</option>
+      <option>骨灰罐</option>
+      <option>今榮租車</option>
     </select>
     <label>費用說明</label>
     <input type="text" id="el" placeholder="例：頭七法事、三牲四果">
@@ -317,10 +324,9 @@ option{background:var(--bg3);}
 <!-- Firebase SDK -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, get, remove, onValue, serverTimestamp }
+import { getDatabase, ref, set, get, remove, onValue }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-// ★ 已套好你的 Firebase 設定 ★
 const firebaseConfig = {
   apiKey:            "AIzaSyBgQDHep1lmUOWKVFH49KOMR7UXN0mpc3Y",
   authDomain:        "xiang-an.firebaseapp.com",
@@ -333,105 +339,174 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
-window._ref = (...a) => ref(db, ...a);
-window._set = set;
-window._get = get;
+window._ref    = (...a) => ref(db, ...a);
+window._set    = set;
+window._get    = get;
 window._remove = remove;
-window._onValue = onValue;
+window._onValue= onValue;
 document.dispatchEvent(new Event('fb-ready'));
 </script>
 
 <script>
+// ══ 品項資料庫 ══
 const VI = {
   '明得堂':[
-    {n:'九朵蓮花盤',u:'組',p:140},{n:'九色九朵蓮花(3朵1串3串)',u:'組',p:360},
-    {n:'蓮花(3朵一串)(3串9朵)',u:'組',p:180},{n:'蓮花寶塔巨無霸',u:'對',p:1550},
-    {n:'紅迷你108蓮花被',u:'件',p:500},{n:'冥財箱',u:'箱',p:170},
-    {n:'庫錢(萬善堂含清潔費)',u:'包',p:85},{n:'D庫錢(箱)-長程',u:'箱',p:55},
-    {n:'庫錢(東丰火爐含清潔費)',u:'包',p:85},{n:'功德紙錢(三色金)',u:'份',p:150},
-    {n:'明-LN錢箱(NT:1000)',u:'個',p:400},{n:'薄黑長袍4尺',u:'件',p:60},
-    {n:'薄黑長袍4.5尺',u:'件',p:60},{n:'薄黑袍5尺',u:'件',p:60},
-    {n:'薄黑袍2.5尺',u:'件',p:60},{n:'薄黑袍3尺',u:'件',p:60},
-    {n:'男西裝-黑',u:'套',p:650},{n:'男西裝-黑條',u:'套',p:650},
-    {n:'男西裝-灰',u:'套',p:650},{n:'男西裝/5L加大',u:'套',p:1200},
-    {n:'彩色絲衣袱-棗紅金',u:'件',p:700},{n:'彩色絲衣袱-粉',u:'套',p:1200},
-    {n:'彩色絲壽鞋-女',u:'雙',p:150},{n:'希-華麗別墅',u:'間',p:1920},
-    {n:'希-華麗別墅+浪漫花園',u:'組',p:4400},{n:'希-三星手機組',u:'盒',p:450},
-    {n:'希-平板電腦',u:'盒',p:600},{n:'希-文房四寶禮盒',u:'組',p:1600},
-    {n:'希-按摩椅',u:'台',p:1400},{n:'萬-運動鞋(耐吉)',u:'雙',p:150},
-    {n:'小魂身(男/女)',u:'個',p:0},{n:'湯圓/八寶粥(贈送)',u:'份',p:0},
-    {n:'往生被',u:'件',p:50},{n:'(24H)905環保龍王香環',u:'盒',p:60},
-    {n:'高級香環架(金色)',u:'個',p:140},{n:'點-2號屋紙紮屋富貴名園',u:'間',p:2500},
-    {n:'7903三色毛巾+提袋(祥安)',u:'組',p:38},{n:'9007兔子無燃毛巾+皂紙盒',u:'盒',p:100},
-    {n:'1605繡紗布小方巾',u:'條',p:40},{n:'2368雨傘毛巾+提袋',u:'組',p:45},
-    {n:'老船長(小)青白禮盒',u:'盒',p:180},{n:'300ml竹炭瓶水',u:'箱',p:90},
-    {n:'粉雙連(B1)',u:'包',p:100},{n:'小銀56支',u:'件',p:220},
-    {n:'無字-1斤安斗燭(白)',u:'對',p:75},{n:'無字-1斤安斗燭(紅)',u:'對',p:75},
-    {n:'金釘子+紅布',u:'支',p:20},{n:'白色手尾錢-伸縮帶',u:'包',p:300},
-    {n:'藍色手尾錢-伸縮帶',u:'包',p:300},{n:'正-黃金杜拜箱',u:'個',p:1500},
-    {n:'抹草濕紙(良友)',u:'盒',p:200},{n:'空毛巾紙盒',u:'個',p:6},
-    {n:'清潔費/萬善堂/房.蓮花',u:'筆',p:900},{n:'清潔費/萬善堂/房',u:'筆',p:600},
-    {n:'雙色緞/旗袍外套',u:'套',p:700},{n:'六菜湯飯組',u:'付',p:1600},
-    {n:'抹草濕紙(歐希)',u:'盒',p:200}
+    {n:'九朵蓮花盤',u:'組',p:140},
+    {n:'九色九朵蓮花(3朵1串3串)',u:'組',p:360},
+    {n:'蓮花(3朵一串)(3串9朵)',u:'組',p:180},
+    {n:'蓮花寶塔巨無霸',u:'對',p:1550},
+    {n:'紅迷你108蓮花被',u:'件',p:500},
+    {n:'冥財箱',u:'箱',p:170},
+    {n:'庫錢(萬善堂含清潔費)',u:'包',p:85},
+    {n:'D庫錢(箱)-長程',u:'箱',p:55},
+    {n:'庫錢(東丰火爐含清潔費)',u:'包',p:85},
+    {n:'功德紙錢(三色金)',u:'份',p:150},
+    {n:'明-LN錢箱(NT:1000)',u:'個',p:400},
+    {n:'薄黑長袍4尺',u:'件',p:60},
+    {n:'薄黑長袍4.5尺',u:'件',p:60},
+    {n:'薄黑袍5尺',u:'件',p:60},
+    {n:'薄黑袍2.5尺',u:'件',p:60},
+    {n:'薄黑袍3尺',u:'件',p:60},
+    {n:'男西裝-黑',u:'套',p:650},
+    {n:'男西裝-黑條',u:'套',p:650},
+    {n:'男西裝-灰',u:'套',p:650},
+    {n:'男西裝/5L加大',u:'套',p:1200},
+    {n:'彩色絲衣袱-棗紅金',u:'件',p:700},
+    {n:'彩色絲衣袱-粉',u:'套',p:1200},
+    {n:'彩色絲壽鞋-女',u:'雙',p:150},
+    {n:'希-華麗別墅',u:'間',p:1920},
+    {n:'希-華麗別墅+浪漫花園',u:'組',p:4400},
+    {n:'希-三星手機組',u:'盒',p:450},
+    {n:'希-平板電腦',u:'盒',p:600},
+    {n:'希-文房四寶禮盒',u:'組',p:1600},
+    {n:'希-按摩椅',u:'台',p:1400},
+    {n:'萬-運動鞋(耐吉)',u:'雙',p:150},
+    {n:'小魂身(男/女)',u:'個',p:0},
+    {n:'湯圓/八寶粥(贈送)',u:'份',p:0},
+    {n:'往生被',u:'件',p:50},
+    {n:'(24H)905環保龍王香環',u:'盒',p:60},
+    {n:'高級香環架(金色)',u:'個',p:140},
+    {n:'點-2號屋紙紮屋富貴名園',u:'間',p:2500},
+    {n:'7903三色毛巾+提袋(祥安)',u:'組',p:38},
+    {n:'9007兔子無燃毛巾+皂紙盒',u:'盒',p:100},
+    {n:'1605繡紗布小方巾',u:'條',p:40},
+    {n:'2368雨傘毛巾+提袋',u:'組',p:45},
+    {n:'老船長(小)青白禮盒',u:'盒',p:180},
+    {n:'300ml竹炭瓶水',u:'箱',p:90},
+    {n:'粉雙連(B1)',u:'包',p:100},
+    {n:'小銀56支',u:'件',p:220},
+    {n:'無字-1斤安斗燭(白)',u:'對',p:75},
+    {n:'無字-1斤安斗燭(紅)',u:'對',p:75},
+    {n:'金釘子+紅布',u:'支',p:20},
+    {n:'白色手尾錢-伸縮帶',u:'包',p:300},
+    {n:'藍色手尾錢-伸縮帶',u:'包',p:300},
+    {n:'正-黃金杜拜箱',u:'個',p:1500},
+    {n:'抹草濕紙(良友)',u:'盒',p:200},
+    {n:'抹草濕紙(歐希)',u:'盒',p:200},
+    {n:'空毛巾紙盒',u:'個',p:6},
+    {n:'清潔費/萬善堂/房.蓮花',u:'筆',p:900},
+    {n:'清潔費/萬善堂/房',u:'筆',p:600},
+    {n:'雙色緞/旗袍外套',u:'套',p:700},
+    {n:'六菜湯飯組',u:'付',p:1600},
   ],
   '無名祭品':[
-    {n:'大五牲',u:'付',p:1800},{n:'外家大五牲',u:'付',p:1800},
-    {n:'素大五牲',u:'付',p:1200},{n:'葷三牲',u:'付',p:900},
-    {n:'素三牲',u:'付',p:700},{n:'素三盤',u:'付',p:700},
-    {n:'生小三牲',u:'付',p:150},{n:'葷十二菜碗(紙碗)',u:'付',p:400},
-    {n:'葷十二菜碗(瓷碗)',u:'付',p:750},{n:'素十二菜碗(紙碗)',u:'付',p:400},
-    {n:'素十二菜碗(瓷碗)',u:'付',p:750},{n:'葷六菜碗(紙碗)',u:'付',p:250},
-    {n:'葷六菜碗(瓷碗)',u:'付',p:425},{n:'素六菜碗(紙碗)',u:'付',p:250},
-    {n:'素六菜碗(瓷碗)',u:'付',p:425},{n:'素盤',u:'盤',p:250},
-    {n:'四果',u:'份',p:400},{n:'水果塔',u:'盤',p:350},
-    {n:'綜合水果',u:'盤',p:180},{n:'大發糕+大蛋糕',u:'組',p:300},
-    {n:'大蛋糕',u:'個',p:150},{n:'小發糕',u:'個',p:40},
-    {n:'紅圓',u:'個',p:40},{n:'紅龜',u:'個',p:40},
-    {n:'湯圓三碗',u:'份',p:90},{n:'冥財箱',u:'份',p:250},
-    {n:'功德紙錢(三色金)',u:'份',p:150},{n:'蓮花九朵',u:'串',p:170},
-    {n:'瓶花',u:'對',p:250},{n:'米飯',u:'鍋',p:200},
-    {n:'茶',u:'瓶',p:25},{n:'酒',u:'瓶',p:50},
-    {n:'水',u:'瓶',p:10},{n:'飯',u:'碗',p:10},
-    {n:'米',u:'包',p:200},{n:'瓶水',u:'箱',p:120},
+    {n:'大五牲',u:'付',p:1800},
+    {n:'外家大五牲',u:'付',p:1800},
+    {n:'素大五牲',u:'付',p:1200},
+    {n:'葷三牲',u:'付',p:900},
+    {n:'素三牲',u:'付',p:700},
+    {n:'素三盤',u:'付',p:700},
+    {n:'生小三牲',u:'付',p:150},
+    {n:'葷十二菜碗(紙碗)',u:'付',p:400},
+    {n:'葷十二菜碗(瓷碗)',u:'付',p:750},
+    {n:'素十二菜碗(紙碗)',u:'付',p:400},
+    {n:'素十二菜碗(瓷碗)',u:'付',p:750},
+    {n:'葷六菜碗(紙碗)',u:'付',p:250},
+    {n:'葷六菜碗(瓷碗)',u:'付',p:425},
+    {n:'素六菜碗(紙碗)',u:'付',p:250},
+    {n:'素六菜碗(瓷碗)',u:'付',p:425},
+    {n:'素盤',u:'盤',p:250},
+    {n:'四果',u:'份',p:400},
+    {n:'水果塔',u:'盤',p:350},
+    {n:'綜合水果',u:'盤',p:180},
+    {n:'大發糕+大蛋糕',u:'組',p:300},
+    {n:'大蛋糕',u:'個',p:150},
+    {n:'小發糕',u:'個',p:40},
+    {n:'紅圓',u:'個',p:40},
+    {n:'紅龜',u:'個',p:40},
+    {n:'湯圓三碗',u:'份',p:90},
+    {n:'冥財箱',u:'份',p:250},
+    {n:'功德紙錢(三色金)',u:'份',p:150},
+    {n:'蓮花九朵',u:'串',p:170},
+    {n:'瓶花',u:'對',p:250},
+    {n:'米飯',u:'鍋',p:200},
+    {n:'茶',u:'瓶',p:25},
+    {n:'酒',u:'瓶',p:50},
+    {n:'水',u:'瓶',p:10},
+    {n:'飯',u:'碗',p:10},
+    {n:'米',u:'包',p:200},
+    {n:'瓶水',u:'箱',p:120},
     {n:'六菜湯飯組',u:'付',p:1600},
   ],
   '烹廚祭品':[
-    {n:'葷三牲（魚）',u:'付',p:850},{n:'十二菜碗(葷)',u:'付',p:450},
-    {n:'安靈小蘭花',u:'對',p:700},{n:'小銀（台製）',u:'件',p:160},
-    {n:'小瓶水',u:'箱',p:85},{n:'蓮花盤(九朵)',u:'盤',p:150},
-    {n:'元寶紙',u:'疊',p:65},{n:'空紅包袋',u:'份',p:5},
-    {n:'四果',u:'份',p:440},{n:'綜果',u:'盤',p:110},
-    {n:'冥財箱',u:'盤',p:200},
+    {n:'葷三牲（魚）',u:'付',p:850},
+    {n:'十二菜碗(葷)',u:'付',p:450},
+    {n:'安靈小蘭花',u:'對',p:700},
+    {n:'小銀（台製）',u:'件',p:160},
+    {n:'小瓶水',u:'箱',p:85},
+    {n:'蓮花盤(九朵)',u:'盤',p:150},
+    {n:'元寶紙',u:'疊',p:65},
+    {n:'空紅包袋',u:'份',p:5},
+    {n:'四果',u:'份',p:440},
+    {n:'綜果',u:'盤',p:110},
+    {n:'冥財箱',u:'個',p:200},
   ],
   '法事':[
-    {n:'頭七法事（道一念二）',u:'場',p:0},{n:'二七法事',u:'場',p:0},
-    {n:'三七法事（道一念二）',u:'場',p:0},{n:'四七法事',u:'場',p:0},
-    {n:'五七法事（道一念二）',u:'場',p:0},{n:'六七法事',u:'場',p:0},
-    {n:'滿七法事（道一念二',u:'場',p:0},{n:'百日法事',u:'場',p:0},
-    {n:'對年法事',u:'場',p:0},{n:'做功德(一日)',u:'場',p:0},
-    {n:'做功德(二日)',u:'場',p:0},{n:'燒庫錢',u:'場',p:0},
-    {n:'誦經(一堂)',u:'堂',p:0},{n:'普渡法事',u:'場',p:0},
-    {n:'超渡牌位',u:'份',p:0},{n:'出殯儀式',u:'場',p:0},
+    {n:'頭七法事（道一念二）',u:'場',p:0},
+    {n:'二七法事',u:'場',p:0},
+    {n:'三七法事（道一念二）',u:'場',p:0},
+    {n:'四七法事',u:'場',p:0},
+    {n:'五七法事（道一念二）',u:'場',p:0},
+    {n:'六七法事',u:'場',p:0},
+    {n:'滿七法事（道一念二）',u:'場',p:0},
+    {n:'百日法事',u:'場',p:0},
+    {n:'對年法事',u:'場',p:0},
+    {n:'做功德(一日)',u:'場',p:0},
+    {n:'做功德(二日)',u:'場',p:0},
+    {n:'燒庫錢',u:'場',p:0},
+    {n:'誦經(一堂)',u:'堂',p:0},
+    {n:'普渡法事',u:'場',p:0},
+    {n:'超渡牌位',u:'份',p:0},
+    {n:'出殯儀式',u:'場',p:0},
     {n:'安神位',u:'次',p:0},
   ],
-   '骨灰罐':[
-    {n:'一般契約（玉石）',u:'顆',p:3000},{n:'黑花崗',u:'場',p:3000},
-    {n:'芙蓉岫玉',u:'顆',p:8000},{n:'緬甸玉',u:'場',p:18000},
-    {n:'紫雲玉',u:'顆',p:0},{n:'碧玉',u:'場',p:0},
-    {n:'老坑岫玉',u:'顆',p:補差價120000},{n:'翡翠玉',u:'份',p:0},
-    {n:'漢玉',u:'顆',p:0},{n:'白玉',u:'顆',p:0},
+  '骨灰罐':[
+    {n:'一般契約（玉石）',u:'顆',p:3000},
+    {n:'黑花崗',u:'顆',p:3000},
+    {n:'芙蓉岫玉',u:'顆',p:8000},
+    {n:'緬甸玉',u:'顆',p:18000},
+    {n:'紫雲玉',u:'顆',p:0},
+    {n:'碧玉',u:'顆',p:0},
+    {n:'老坑岫玉',u:'顆',p:0},
+    {n:'翡翠玉',u:'顆',p:0},
+    {n:'漢玉',u:'顆',p:0},
+    {n:'白玉',u:'顆',p:0},
   ],
   '今榮租車':[
-    {n:'靈車(一般)',u:'趟',p:0},{n:'靈車(長程)',u:'趟',p:0},
-    {n:'禮車(家屬)',u:'輛',p:0},{n:'遊覽車',u:'輛',p:0},
-    {n:'冷凍車',u:'天',p:0},{n:'停車費',u:'次',p:0},
+    {n:'靈車(一般)',u:'趟',p:0},
+    {n:'靈車(長程)',u:'趟',p:0},
+    {n:'禮車(家屬)',u:'輛',p:0},
+    {n:'遊覽車',u:'輛',p:0},
+    {n:'冷凍車',u:'天',p:0},
+    {n:'停車費',u:'次',p:0},
     {n:'高速公路過路費',u:'次',p:0},
   ],
 };
 
+// ══ 狀態 ══
 let CU=null,cases={},users={},activeCID=null,eSel=[],cMonth='all',sMonth='all',unsub=null;
 
-const dbR  = (...p) => window._ref(...p);
+const dbR   = (...p) => window._ref(...p);
 const dbGet = p => window._get(dbR(p)).then(s=>s.val());
 const dbSet = (p,v) => window._set(dbR(p),v);
 const dbDel = p => window._remove(dbR(p));
@@ -442,36 +517,36 @@ function setSync(msg,ok){
   document.getElementById('stxt').textContent=msg;
 }
 
+// ══ 初始化 ══
 document.addEventListener('fb-ready', async ()=>{
-  try {
-    document.getElementById('splashMsg').textContent='連接雲端資料庫...';
-    // 初始化帳號
-    const u = await dbGet('users');
+  try{
+    const u=await dbGet('users');
     if(!u){
       await dbSet('users',{
-        admin: {id:'admin', name:'老闆',   username:'admin',  password:'boss1234', role:'admin'},
-        staff1:{id:'staff1',name:'員工一', username:'staff1', password:'staff123', role:'staff'},
+        admin: {id:'admin', name:'老闆',  username:'admin',  password:'boss1234', role:'admin'},
+        staff1:{id:'staff1',name:'員工一',username:'staff1', password:'staff123', role:'staff'},
       });
     }
-    users = await dbGet('users') || {};
+    users=await dbGet('users')||{};
     document.getElementById('splashMsg').textContent='連線成功！';
     setTimeout(()=>{
       document.getElementById('splash').classList.add('hide');
       setTimeout(()=>document.getElementById('splash').style.display='none',500);
     },700);
-    const sid = sessionStorage.getItem('xa_sid');
-    const found = Object.values(users).find(u=>u.id===sid);
+    const sid=sessionStorage.getItem('xa_sid');
+    const found=Object.values(users).find(u=>u.id===sid);
     if(found){loginAs(found);return;}
     document.getElementById('s-login').classList.add('on');
-  } catch(e) {
+  }catch(e){
     document.querySelector('.spin').style.display='none';
     document.getElementById('splashMsg').style.display='none';
     const err=document.getElementById('splashErr');
     err.style.display='block';
-    err.textContent='⚠️ 連線失敗：'+e.message+'\n\n請確認 Firebase Realtime Database 已啟用';
+    err.textContent='⚠️ 連線失敗：'+e.message;
   }
 });
 
+// ══ 登入登出 ══
 async function doLogin(){
   const u=document.getElementById('lu').value.trim();
   const p=document.getElementById('lp').value;
@@ -507,6 +582,7 @@ function doLogout(){
   document.getElementById('lp').value='';
 }
 
+// ══ 即時同步 ══
 function startSync(){
   setSync('同步中...',null);
   if(unsub)unsub();
@@ -518,6 +594,7 @@ function startSync(){
   },()=>setSync('連線中斷，請重整',false));
 }
 
+// ══ 案件 ══
 function openNewCase(){
   const t=new Date();
   ['nc-n','nc-note'].forEach(id=>document.getElementById(id).value='');
@@ -557,6 +634,7 @@ async function togglePaid(id){
   await dbSet('cases/'+id+'/paid',!(cases[id]&&cases[id].paid));
 }
 
+// ══ 費用 ══
 function openAddExp(cid){
   activeCID=cid;eSel=[];
   const c=cases[cid];
@@ -661,6 +739,7 @@ async function deleteExp(cid,eid){
   await dbDel('cases/'+cid+'/expenses/'+eid);showToast('已刪除');
 }
 
+// ══ 渲染案件 ══
 function renderCases(){
   const arr=Object.values(cases);
   const months=[...new Set(arr.map(c=>c.month))].filter(Boolean).sort().reverse();
@@ -745,6 +824,7 @@ function renderCCard(c){
 
 function toggleBody(id){document.getElementById('cb-'+id).classList.toggle('open');}
 
+// ══ 統計 ══
 function renderStats(){
   const arr=Object.values(cases);
   const months=[...new Set(arr.map(c=>c.month))].filter(Boolean).sort().reverse();
@@ -783,6 +863,7 @@ function renderStats(){
 
 function setSM(m){sMonth=m;renderStats();}
 
+// ══ 帳號管理 ══
 function renderUList(){
   document.getElementById('ulist').innerHTML=Object.values(users).map(u=>`
     <div class="urow">
@@ -818,6 +899,7 @@ async function deleteUser(id){
   renderUList();showToast('已刪除');
 }
 
+// ══ 備份 ══
 function exportData(){
   const blob=new Blob([JSON.stringify({cases,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});
   const a=document.createElement('a');
@@ -836,6 +918,7 @@ async function importData(e){
   reader.readAsText(file);e.target.value='';
 }
 
+// ══ 工具 ══
 function showPg(p){
   document.querySelectorAll('.pg').forEach(el=>el.classList.remove('on'));
   document.querySelectorAll('.nav button').forEach(el=>el.classList.remove('on'));
